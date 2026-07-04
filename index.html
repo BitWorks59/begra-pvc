@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BEGRA PVC Compounds — Logistics Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root{
+  --blue: #1652F0;
+  --blue-dark: #0C2E8A;
+  --blue-light: #EAF0FF;
+  --blue-soft: #DCE7FF;
+  --ink: #101B33;
+  --muted: #6B7794;
+  --muted-2: #9AA5BD;
+  --border: #E4E9F4;
+  --bg: #F4F6FB;
+  --white: #FFFFFF;
+  --green: #1FAE7C;
+  --green-bg: #E6F7F0;
+  --amber: #D98C12;
+  --amber-bg: #FCF1DE;
+  --red: #E0473E;
+  --red-bg: #FCEAE9;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.mono{ font-family:'JetBrains Mono', monospace; }
+
+.shell{
+  display:grid;
+  grid-template-columns: 248px 1fr;
+  min-height:100vh;
+}
+
+/* ===================== SIDEBAR ===================== */
+.sidebar{
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  padding: 22px 16px;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 4px 8px 24px;
+}
+.logo-mark{
+  width:34px; height:34px;
+  border-radius:9px;
+  background: linear-gradient(155deg, var(--blue), var(--blue-dark));
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.logo-mark svg{ width:18px; height:18px; }
+.logo-text{ font-size:16px; font-weight:800; letter-spacing:-0.2px; }
+.logo-text span{ display:block; font-size:10px; font-weight:600; color: var(--muted-2); letter-spacing:0.6px; margin-top:1px; }
+
+.nav-section-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  color: var(--muted-2);
+  text-transform:uppercase;
+  padding: 14px 10px 8px;
+}
+.nav{ display:flex; flex-direction:column; gap:2px; }
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:9px 10px;
+  border-radius:9px;
+  font-size:13.5px;
+  font-weight:600;
+  color: var(--muted);
+  cursor:pointer;
+  transition: background .15s ease, color .15s ease;
+  position:relative;
+}
+.nav-item svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; }
+.nav-item:hover{ background: var(--blue-light); color: var(--blue-dark); }
+.nav-item.active{ background: var(--blue); color: var(--white); }
+.nav-item.active svg{ opacity:1; }
+.nav-badge{
+  margin-left:auto;
+  background: var(--red);
+  color:#fff;
+  font-size:9.5px;
+  font-weight:700;
+  border-radius:99px;
+  padding:1px 6px;
+}
+.nav-item.active .nav-badge{ background: rgba(255,255,255,0.25); }
+
+.sidebar-spacer{ flex:1; }
+
+.sidebar-foot{
+  border-top:1px solid var(--border);
+  padding-top:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.avatar{
+  width:34px; height:34px; border-radius:50%;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12.5px;
+  flex-shrink:0;
+}
+.foot-text{ font-size:12.5px; font-weight:700; }
+.foot-text span{ display:block; font-size:11px; color: var(--muted-2); font-weight:500; }
+
+/* ===================== MAIN ===================== */
+.main{ padding: 26px 32px 50px; position:relative; overflow:hidden; }
+.watermark{
+  position:absolute;
+  top:20px; right:-20px;
+  width:440px; height:auto;
+  opacity:0.05;
+  pointer-events:none;
+  z-index:0;
+}
+.main > *:not(.watermark){ position:relative; z-index:1; }
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:24px;
+}
+.topbar h1{ font-size:21px; font-weight:800; letter-spacing:-0.3px; }
+.topbar p{ font-size:12.5px; color: var(--muted); margin-top:3px; }
+
+.topbar-right{ display:flex; align-items:center; gap:12px; }
+.search{
+  display:flex; align-items:center; gap:8px;
+  background: var(--white);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:8px 12px;
+  font-size:12.5px;
+  color: var(--muted-2);
+  min-width:200px;
+}
+.search svg{ width:14px; height:14px; opacity:0.6; }
+.btn-primary{
+  background: var(--blue);
+  color:#fff;
+  border:none;
+  border-radius:9px;
+  padding:9px 16px;
+  font-size:12.5px;
+  font-weight:700;
+  font-family:'Manrope', sans-serif;
+  cursor:pointer;
+  display:flex; align-items:center; gap:7px;
+}
+.btn-primary:hover{ background: var(--blue-dark); }
+.icon-btn{
+  width:36px; height:36px;
+  border-radius:9px;
+  border:1px solid var(--border);
+  background: var(--white);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  cursor:pointer;
+}
+.icon-btn svg{ width:16px; height:16px; color: var(--muted); }
+.icon-btn .dot{
+  position:absolute; top:7px; right:8px;
+  width:6px; height:6px; border-radius:50%;
+  background: var(--red);
+  border:1.5px solid var(--white);
+}
+
+/* ===================== KPI CARDS ===================== */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:16px;
+  margin-bottom:22px;
+}
+.kpi-card{
+  background: var(--white);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px 18px 16px;
+}
+.kpi-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+.kpi-icon{
+  width:34px; height:34px;
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+}
+.kpi-icon svg{ width:17px; height:17px; }
+.kpi-label{ font-size:12px; font-weight:600; color: var(--muted); }
+.kpi-value{ font-size:25px; font-weight:800; letter-spacing:-0.5px; margin-bottom:8px; }
+.kpi-value .unit{ font-size:13px; color: var(--muted-2); font-weight:600; }
+.kpi-delta{
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11.5px; font-weight:700;
+  padding:3px 8px 3px 7px;
+  border-radius:99px;
+}
+.kpi-delta.up{ background: var(--green-bg); color: var(--green); }
+.kpi-delta.down{ background: var(--red-bg); color: var(--red); }
+.kpi-delta.flat{ background: var(--bg); color: var(--muted-2); }
+.kpi-delta-label{ font-size:11px; color: var(--muted-2); margin-left:6px; font-weight:500; }
+
+/* ===================== PANELS ===================== */
+.row-2{ display:grid; grid-template-columns: 1.5fr 1fr; gap:16px; margin-bottom:16px; }
+.row-2b{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+
+.panel{
+  background: var(--white);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px 22px;
+}
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.panel-title{ font-size:14.5px; font-weight:800; }
+.panel-sub{ font-size:11.5px; color: var(--muted-2); margin-top:2px; font-weight:500; }
+.tabs{ display:flex; gap:4px; background: var(--bg); padding:3px; border-radius:8px; }
+.tab{ font-size:11px; font-weight:700; color: var(--muted); padding:5px 10px; border-radius:6px; cursor:pointer; }
+.tab.active{ background: var(--white); color: var(--blue); box-shadow:0 1px 2px rgba(16,27,51,0.08); }
+
+.legend{ display:flex; gap:16px; }
+.legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); font-weight:600; }
+.legend-dot{ width:8px; height:8px; border-radius:2px; }
+
+/* status pills */
+.pill{
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:10.5px; font-weight:700;
+  padding:4px 10px;
+  border-radius:99px;
+}
+.pill.ontime{ background: var(--green-bg); color: var(--green); }
+.pill.risk{ background: var(--amber-bg); color: var(--amber); }
+.pill.delayed{ background: var(--red-bg); color: var(--red); }
+.pill::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* table */
+table{ width:100%; border-collapse:collapse; }
+thead th{
+  text-align:left;
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  color: var(--muted-2);
+  font-weight:700;
+  padding:0 10px 10px 0;
+  border-bottom:1px solid var(--border);
+}
+tbody td{
+  padding:12px 10px 12px 0;
+  font-size:13px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tbody tr:last-child td{ border-bottom:none; }
+tbody tr{ transition: background .4s ease; }
+.waybill{ font-family:'JetBrains Mono', monospace; color: var(--muted); font-size:11.5px; font-weight:500; }
+.route-cell{ display:flex; align-items:center; gap:6px; font-weight:700; }
+.route-cell .arrow{ color: var(--muted-2); font-size:10px; }
+.route-cell .flag{ font-size:14px; }
+.row-updated-flash{ animation: flash 1.2s ease; }
+@keyframes flash{
+  0%{ background: var(--blue-light); }
+  100%{ background: transparent; }
+}
+
+/* donut legend */
+.donut-wrap{ display:flex; align-items:center; gap:22px; }
+.donut-legend{ display:flex; flex-direction:column; gap:12px; flex:1; }
+.donut-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; }
+.donut-row .lbl{ display:flex; align-items:center; gap:9px; color: var(--ink); font-weight:600; }
+.donut-row .sw{ width:9px; height:9px; border-radius:3px; }
+.donut-row .val{ font-family:'JetBrains Mono', monospace; font-weight:700; }
+.donut-row .pct{ color: var(--muted-2); font-size:11px; margin-left:5px; }
+
+/* ===================== LOAD BOARD PAGE ===================== */
+.view{ display:none; }
+.view.active{ display:block; }
+
+.lb-toolbar{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px;
+}
+.lb-filters{ display:flex; gap:4px; background: var(--bg); padding:3px; border-radius:9px; }
+.lb-filter{
+  font-size:11.5px; font-weight:700; color: var(--muted);
+  padding:7px 14px; border-radius:7px; cursor:pointer;
+}
+.lb-filter.active{ background: var(--white); color: var(--blue); box-shadow:0 1px 2px rgba(16,27,51,0.08); }
+
+.lb-stats{ display:flex; gap:10px; }
+.lb-stat{
+  background: var(--white); border:1px solid var(--border); border-radius:10px;
+  padding:8px 14px; font-size:11.5px; color:var(--muted); font-weight:600;
+}
+.lb-stat b{ color:var(--ink); font-family:'JetBrains Mono', monospace; font-weight:700; margin-right:4px; }
+
+.placeholder-panel{
+  background: var(--white); border:1px solid var(--border); border-radius:14px;
+  padding: 60px 30px; text-align:center;
+}
+.placeholder-panel svg{ width:40px; height:40px; color:var(--muted-2); margin-bottom:14px; }
+.placeholder-panel h3{ font-size:16px; font-weight:800; margin-bottom:6px; }
+.placeholder-panel p{ font-size:12.5px; color:var(--muted); }
+
+@media (max-width: 1150px){
+  .shell{ grid-template-columns: 1fr; }
+  .sidebar{ display:none; }
+  .kpi-grid{ grid-template-columns: repeat(2,1fr); }
+  .row-2, .row-2b{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 17a2 2 0 100 4 2 2 0 000-4zM19 17a2 2 0 100 4 2 2 0 000-4zM3 4h2l1.6 9.6a1 1 0 001 .8h9.7a1 1 0 001-.8L20 8H6"/></svg>
+      </div>
+      <div class="logo-text">BEGRA<span>PVC COMPOUNDS</span></div>
+    </div>
+
+    <div class="nav-section-label">Overview</div>
+    <div class="nav">
+      <div class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-view="shipments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13h4l1-4h7l2 4h4v5a1 1 0 01-1 1h-1a2 2 0 11-4 0H9a2 2 0 11-4 0H4a1 1 0 01-1-1v-5z"/><circle cx="7" cy="18" r="0.5"/></svg>
+        Shipments
+        <span class="nav-badge">24</span>
+      </div>
+      <div class="nav-item" data-view="loadboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
+        Load Board
+        <span class="nav-badge">14</span>
+      </div>
+      <div class="nav-item" data-view="fleet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 17a2 2 0 100 4 2 2 0 000-4zM19 17a2 2 0 100 4 2 2 0 000-4zM3 4h2l1.6 9.6a1 1 0 001 .8h9.7a1 1 0 001-.8L20 8H6"/></svg>
+        Fleet &amp; Vehicles
+      </div>
+      <div class="nav-item" data-view="routes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 7l8 10M6 8.5V14a4 4 0 004 4h2"/></svg>
+        Routes
+      </div>
+      <div class="nav-item" data-view="warehouses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1V9.5z"/></svg>
+        Warehouses
+      </div>
+    </div>
+
+    <div class="nav-section-label">Insights</div>
+    <div class="nav">
+      <div class="nav-item" data-view="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V10M11 19V5M18 19v-7"/></svg>
+        Reports
+      </div>
+      <div class="nav-item" data-view="activity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Activity Log
+      </div>
+      <div class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.97 7.97 0 000-3l2-1.4-2-3.4-2.3.9a8 8 0 00-2.6-1.5L14 2h-4l-.5 2.1a8 8 0 00-2.6 1.5l-2.3-.9-2 3.4 2 1.4a7.97 7.97 0 000 3l-2 1.4 2 3.4 2.3-.9a8 8 0 002.6 1.5L10 22h4l.5-2.1a8 8 0 002.6-1.5l2.3.9 2-3.4-2-1.4z"/></svg>
+        Settings
+      </div>
+    </div>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="sidebar-foot">
+      <div class="avatar">PA</div>
+      <div class="foot-text">Praise A.<span>Ops Manager</span></div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Logistics Overview</h1>
+        <p id="pageSub">Tuesday, June 30 · Network-wide performance, updated live</p>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Search waybill, route...
+        </div>
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="dot"></div>
+        </div>
+        <button class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New Shipment
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== DASHBOARD VIEW ===================== -->
+    <div class="view active" id="view-dashboard">
+      <!-- KPI CARDS -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- ROW 2: trend + donut -->
+      <div class="row-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">On-Time Delivery Rate</div>
+              <div class="panel-sub">Trailing 14 days · network-wide</div>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Actual</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--muted-2)"></div>Target 95%</div>
+            </div>
+          </div>
+          <svg id="trendChart" viewBox="0 0 640 200" style="width:100%; height:200px;"></svg>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Fleet Status</div>
+              <div class="panel-sub">428 vehicles tracked</div>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <svg id="donutChart" viewBox="0 0 140 140" style="width:140px; height:140px; flex-shrink:0;"></svg>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: bar + table -->
+      <div class="row-2b">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Shipment Volume by Region</div>
+              <div class="panel-sub">This week · units</div>
+            </div>
+          </div>
+          <svg id="barChart" viewBox="0 0 480 190" style="width:100%; height:190px;"></svg>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Live Load Board</div>
+              <div class="panel-sub" id="manifestSub">Origin: Germany · rates in EUR</div>
+            </div>
+            <div class="tab active" style="cursor:pointer;" onclick="goToView('loadboard')">View all →</div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Load ID</th><th>Route</th><th>Rate</th><th>Status</th></tr>
+            </thead>
+            <tbody id="manifestBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== LOAD BOARD VIEW ===================== -->
+    <div class="view" id="view-loadboard">
+      <div class="lb-toolbar">
+        <div class="lb-filters" id="lbFilters">
+          <div class="lb-filter active" data-status="all">All Loads</div>
+          <div class="lb-filter" data-status="ontime">Open</div>
+          <div class="lb-filter" data-status="risk">Booked</div>
+          <div class="lb-filter" data-status="delayed">In Transit</div>
+        </div>
+        <div class="lb-stats">
+          <div class="lb-stat"><b id="lbCount">0</b>loads</div>
+          <div class="lb-stat"><b id="lbAvgRate">€0</b>avg rate</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Load Board</div>
+            <div class="panel-sub">Origin: Germany · EU corridor · rates in EUR</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Load ID</th><th>Route</th><th>Distance</th><th>Rate</th><th>Status</th></tr>
+          </thead>
+          <tbody id="loadboardBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== PLACEHOLDER VIEW (other nav items) ===================== -->
+    <div class="view" id="view-placeholder">
+      <div class="placeholder-panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+        <h3 id="placeholderTitle">Coming soon</h3>
+        <p>This section is still being built out.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function rand(min, max){ return Math.random() * (max - min) + min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ============ KPI cards ============ */
+const kpiIconBg = ['var(--blue-light)','var(--green-bg)','var(--blue-light)','var(--amber-bg)'];
+const kpiIconColor = ['var(--blue)','var(--green)','var(--blue)','var(--amber)'];
+const kpiIcons = [
+  '<path d="M5 13l4 4L19 7"/>',
+  '<path d="M5 17a2 2 0 100 4 2 2 0 000-4zM19 17a2 2 0 100 4 2 2 0 000-4zM3 4h2l1.6 9.6a1 1 0 001 .8h9.7a1 1 0 001-.8L20 8H6"/>',
+  '<rect x="3" y="11" width="4" height="9"/><rect x="10" y="6" width="4" height="14"/><rect x="17" y="3" width="4" height="17"/>',
+  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+];
+const kpis = [
+  { label:"On-Time Delivery", target:0, unit:"%", fmt:v=>v.toFixed(1), delta:0, good:true },
+  { label:"Active Shipments", target:0, unit:"", fmt:v=>Math.round(v).toLocaleString(), delta:0, good:true },
+  { label:"Fleet Utilization", target:0, unit:"%", fmt:v=>v.toFixed(1), delta:0, good:false },
+  { label:"Avg Transit Time", target:0, unit:"days", fmt:v=>v.toFixed(1), delta:0, good:true },
+];
+kpis.forEach(k=> k.base = 0);
+
+function renderKpis(){
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = kpis.map((k,i)=>{
+    const isUp = k.delta > 0;
+    const deltaClass = k.base === 0 ? 'flat' : (isUp === k.good) ? 'up' : 'down';
+    const arrow = k.base === 0 ? '•' : (isUp ? '↑' : '↓');
+    const deltaDisp = k.unit==='days' ? `${Math.abs(k.delta).toFixed(1)}d` : `${Math.abs(k.delta).toFixed(k.unit==='%'?1:0)}${k.unit==='%'?'%':''}`;
+    return `
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">${k.label}</div>
+          </div>
+          <div class="kpi-icon" style="background:${kpiIconBg[i]}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${kpiIconColor[i]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${kpiIcons[i]}</svg>
+          </div>
+        </div>
+        <div class="kpi-value">${k.fmt(k.base)}<span class="unit">${k.unit}</span></div>
+        <span class="kpi-delta ${deltaClass}">${k.base===0 ? 'loading' : arrow+' '+deltaDisp}</span><span class="kpi-delta-label">${k.base===0 ? '' : 'vs last week'}</span>
+      </div>`;
+  }).join('');
+}
+renderKpis();
+
+/* ============ trend line chart ============ */
+const trendData = [88.5,90.1,89.4,91.2,92.0,90.8,93.1,92.4,94.0,93.6,94.8,93.9,94.5,94.2];
+function renderTrend(){
+  const w=640, h=200, padL=30, padB=24, padT=10, padR=10;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const min = 85, max = 100;
+  const stepX = innerW / (trendData.length - 1);
+
+  let gridLines = '';
+  [85,90,95,100].forEach(v=>{
+    const y = padT + innerH - ((v-min)/(max-min))*innerH;
+    gridLines += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#E4E9F4" stroke-width="1"/>
+      <text x="2" y="${y+3}" font-size="9" fill="#9AA5BD" font-family="JetBrains Mono, monospace">${v}</text>`;
+  });
+
+  const targetY = padT + innerH - ((95-min)/(max-min))*innerH;
+  const targetLine = `<line x1="${padL}" y1="${targetY}" x2="${w-padR}" y2="${targetY}" stroke="#9AA5BD" stroke-width="1.4" stroke-dasharray="4 4"/>`;
+
+  let linePts = trendData.map((d,i)=>{
+    const x = padL + i*stepX;
+    const y = padT + innerH - ((d-min)/(max-min))*innerH;
+    return [x,y];
+  });
+  const linePath = linePts.map((p,i)=>`${i===0?'M':'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const areaPath = linePath + ` L${linePts[linePts.length-1][0].toFixed(1)},${padT+innerH} L${linePts[0][0].toFixed(1)},${padT+innerH} Z`;
+  const dots = linePts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===linePts.length-1?3.5:0}" fill="#1652F0"/>`).join('');
+
+  document.getElementById('trendChart').innerHTML = `
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1652F0" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#1652F0" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    ${targetLine}
+    <path d="${areaPath}" fill="url(#areaGrad)"/>
+    <path d="${linePath}" fill="none" stroke="#1652F0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+  `;
+}
+renderTrend();
+
+/* ============ bar chart ============ */
+const regions = [
+  {name:'Northeast', val:312, color:'#1652F0'},
+  {name:'Midwest', val:268, color:'#1652F0'},
+  {name:'South', val:395, color:'#1652F0'},
+  {name:'West', val:221, color:'#1652F0'},
+  {name:"Int'l", val:88, color:'#9AC2FF'},
+];
+function renderBars(){
+  const w=480, h=190, padB=26, padT=10;
+  const innerH = h - padB - padT;
+  const max = Math.max(...regions.map(r=>r.val)) * 1.15;
+  const bw = 52, gap = (w - bw*regions.length) / (regions.length+1);
+  let bars = '';
+  regions.forEach((r,i)=>{
+    const x = gap + i*(bw+gap);
+    const barH = (r.val/max)*innerH;
+    const y = padT + innerH - barH;
+    bars += `
+      <rect x="${x}" y="${y}" width="${bw}" height="${barH}" rx="6" fill="${r.color}"/>
+      <text x="${x+bw/2}" y="${y-8}" text-anchor="middle" font-size="12" font-weight="700" fill="#101B33" font-family="JetBrains Mono, monospace">${r.val}</text>
+      <text x="${x+bw/2}" y="${h-6}" text-anchor="middle" font-size="10.5" fill="#6B7794" font-family="Manrope, sans-serif" font-weight="600">${r.name}</text>
+    `;
+  });
+  document.getElementById('barChart').innerHTML = bars;
+}
+renderBars();
+
+/* ============ donut chart ============ */
+const fleetStatus = [
+  {name:'In Transit', val:248, color:'#1652F0'},
+  {name:'Loading/Unloading', val:91, color:'#5C8DFF'},
+  {name:'Idle', val:64, color:'#C7D6FB'},
+  {name:'Maintenance', val:25, color:'#E0473E'},
+];
+function renderDonut(){
+  const total = fleetStatus.reduce((s,d)=>s+d.val,0);
+  const cx=70, cy=70, r=52, rInner=33;
+  let angle = -90;
+  let paths = '';
+  fleetStatus.forEach(d=>{
+    const slice = (d.val/total)*360;
+    const a0 = angle * Math.PI/180;
+    const a1 = (angle+slice) * Math.PI/180;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const xi0 = cx + rInner*Math.cos(a1), yi0 = cy + rInner*Math.sin(a1);
+    const xi1 = cx + rInner*Math.cos(a0), yi1 = cy + rInner*Math.sin(a0);
+    const large = slice > 180 ? 1 : 0;
+    paths += `<path d="M${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1} L${xi0},${yi0} A${rInner},${rInner} 0 ${large} 0 ${xi1},${yi1} Z" fill="${d.color}"/>`;
+    angle += slice;
+  });
+  document.getElementById('donutChart').innerHTML = paths + `
+    <text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="18" font-weight="800" fill="#101B33" font-family="JetBrains Mono, monospace">${total}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-size="8" fill="#9AA5BD" font-family="Manrope, sans-serif" font-weight="700">ACTIVE</text>
+  `;
+  document.getElementById('donutLegend').innerHTML = fleetStatus.map(d=>{
+    const pct = Math.round((d.val/total)*100);
+    return `
+    <div class="donut-row">
+      <div class="lbl"><div class="sw" style="background:${d.color}"></div>${d.name}</div>
+      <div class="val">${d.val}<span class="pct">${pct}%</span></div>
+    </div>
+  `}).join('');
+}
+renderDonut();
+
+/* ============ manifest / load board data ============ */
+const routePool = [
+  { o:'Berlin, DE', of:'🇩🇪', d:'Berlin-Brandenburg, DE', df:'🇩🇪' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Homburg, DE', df:'🇩🇪' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Berlin, DE', df:'🇩🇪' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Poznan, PL', df:'🇵🇱' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Katowice, PL', df:'🇵🇱' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Brussels, BE', df:'🇧🇪' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Paris, FR', df:'🇫🇷' },
+  { o:'Homburg, DE', of:'🇩🇪', d:'Berlin, DE', df:'🇩🇪' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'Kyiv, UA', df:'🇺🇦' },
+  { o:'Berlin, DE', of:'🇩🇪', d:'London, UK', df:'🇬🇧' },
+];
+const distances = { 'Berlin-Brandenburg, DE':65,'Homburg, DE':580,'Berlin, DE':12,'Poznan, PL':270,'Katowice, PL':560,'Brussels, BE':650,'Paris, FR':1050,'Kyiv, UA':1320,'London, UK':1100 };
+const statuses = [
+  {key:'ontime', label:'Open'},
+  {key:'risk', label:'Booked'},
+  {key:'delayed', label:'In Transit'},
+];
+function genWaybill(){ return 'LD-' + Math.floor(1000+Math.random()*8999); }
+function genRow(){
+  const r = pick(routePool);
+  const km = distances[r.d] || Math.floor(rand(50,1400));
+  const rate = Math.round(km * rand(1.1, 1.75));
+  const st = pick([statuses[0],statuses[0],statuses[0],statuses[1],statuses[2]]);
+  return { id: genWaybill(), route:r, km, rate, status: st };
+}
+let manifest = Array.from({length:14}, genRow);
+
+function renderManifest(flashIdx=-1){
+  const body = document.getElementById('manifestBody');
+  body.innerHTML = manifest.map((r,i)=>`
+    <tr class="${i===flashIdx?'row-updated-flash':''}">
+      <td class="waybill">${r.id}</td>
+      <td><div class="route-cell"><span class="flag">${r.route.of}</span>${r.route.o.split(',')[0]} <span class="arrow">→</span> <span class="flag">${r.route.df}</span>${r.route.d.split(',')[0]}</div></td>
+      <td class="mono">€${r.rate.toLocaleString()}</td>
+      <td><span class="pill ${r.status.key}">${r.status.label}</span></td>
+    </tr>
+  `).join('');
+}
+renderManifest();
+
+/* full load-board page: bigger list pulled from the same pool */
+let loadboardData = Array.from({length:26}, genRow);
+let lbFilter = 'all';
+
+function renderLoadboard(){
+  const body = document.getElementById('loadboardBody');
+  const rows = loadboardData.filter(r => lbFilter==='all' || r.status.key===lbFilter);
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="waybill">${r.id}</td>
+      <td><div class="route-cell"><span class="flag">${r.route.of}</span>${r.route.o.split(',')[0]} <span class="arrow">→</span> <span class="flag">${r.route.df}</span>${r.route.d.split(',')[0]}</div></td>
+      <td class="mono">${r.km.toLocaleString()} km</td>
+      <td class="mono">€${r.rate.toLocaleString()}</td>
+      <td><span class="pill ${r.status.key}">${r.status.label}</span></td>
+    </tr>
+  `).join('');
+  document.getElementById('lbCount').textContent = rows.length;
+  const avg = rows.length ? Math.round(rows.reduce((s,r)=>s+r.rate,0)/rows.length) : 0;
+  document.getElementById('lbAvgRate').textContent = '€' + avg.toLocaleString();
+}
+renderLoadboard();
+
+document.getElementById('lbFilters').addEventListener('click', (e)=>{
+  const target = e.target.closest('.lb-filter');
+  if(!target) return;
+  document.querySelectorAll('.lb-filter').forEach(f=>f.classList.remove('active'));
+  target.classList.add('active');
+  lbFilter = target.dataset.status;
+  renderLoadboard();
+});
+
+/* ============ live demo updates ============ */
+setInterval(()=>{
+  const idx = Math.floor(rand(0,manifest.length));
+  manifest[idx] = genRow();
+  renderManifest(idx);
+
+  const lbIdx = Math.floor(rand(0,loadboardData.length));
+  loadboardData[lbIdx] = genRow();
+  if(document.getElementById('view-loadboard').classList.contains('active')){
+    renderLoadboard();
+  }
+}, 4200);
+
+/* ============ navigation ============ */
+const pageMeta = {
+  dashboard:  { title:'Logistics Overview', sub:'Tuesday, June 30 · Network-wide performance, updated live' },
+  shipments:  { title:'Shipments', sub:'Coming soon' },
+  loadboard:  { title:'Load Board', sub:'Origin: Germany · EU corridor · open, booked, and in-transit loads' },
+  fleet:      { title:'Fleet & Vehicles', sub:'Coming soon' },
+  routes:     { title:'Routes', sub:'Coming soon' },
+  warehouses: { title:'Warehouses', sub:'Coming soon' },
+  reports:    { title:'Reports', sub:'Coming soon' },
+  activity:   { title:'Activity Log', sub:'Coming soon' },
+  settings:   { title:'Settings', sub:'Coming soon' },
+};
+
+function goToView(view){
+  const navEl = document.querySelector(`.nav-item[data-view="${view}"]`);
+  if(navEl) selectNav(navEl, view);
+}
+
+function selectNav(el, view){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const hasBuiltView = view === 'dashboard' || view === 'loadboard';
+  const target = document.getElementById(hasBuiltView ? 'view-'+view : 'view-placeholder');
+  target.classList.add('active');
+
+  const meta = pageMeta[view] || { title:'Coming soon', sub:'' };
+  document.getElementById('pageTitle').textContent = meta.title;
+  document.getElementById('pageSub').textContent = meta.sub;
+  if(!hasBuiltView){
+    document.getElementById('placeholderTitle').textContent = meta.title;
+  }
+  if(view === 'loadboard'){
+    renderLoadboard();
+  }
+}
+
+document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
+  item.addEventListener('click', ()=> selectNav(item, item.dataset.view));
+});
+</script>
+</body>
+</html>
