@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -27,7 +27,34 @@
   --purple-bg: #F1EAFC;
   --teal: #12A6A0;
   --teal-bg: #E1F6F5;
+  color-scheme: light;
+  transition: background-color .25s ease, color .25s ease;
 }
+ 
+html.dark{
+  --blue: #4C79E8;
+  --blue-dark: #83A2F2;
+  --blue-light: #16234A;
+  --blue-soft: #1E2E5C;
+  --ink: #EBF0FC;
+  --muted: #9AA8CC;
+  --muted-2: #6C769C;
+  --border: #232C4C;
+  --bg: #0A1226;
+  --white: #10193A;
+  --green: #3FCB9C;
+  --green-bg: #113325;
+  --amber: #F0AC3E;
+  --amber-bg: #3A2C10;
+  --red: #F27A72;
+  --red-bg: #3A1616;
+  --purple: #A886F0;
+  --purple-bg: #2A1D4A;
+  --teal: #3FD4CC;
+  --teal-bg: #0F3230;
+  color-scheme: dark;
+}
+html.dark body{ background: var(--bg); }
  
 *{ box-sizing:border-box; margin:0; padding:0; }
 html{ scroll-behavior:smooth; }
@@ -411,7 +438,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible, .nav-item:focus
 .pill.assigned{ background: var(--green-bg); color: var(--green); }
 .pill.transit{ background: var(--amber-bg); color: var(--amber); }
 .pill.delivered{ background: var(--green-bg); color: var(--green); }
-.pill.cancelled{ background: #EEF0F5; color: var(--muted); }
+.pill.cancelled{ background: var(--border); color: var(--muted); }
 .pill.yes{ background: var(--green-bg); color: var(--green); }
 .pill.no{ background: var(--red-bg); color: var(--red); }
 .pill.noshow{ background: var(--red-bg); color: var(--red); }
@@ -692,6 +719,10 @@ tbody tr:last-child td{ border-bottom:none; }
         <div class="date-range">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
           <span class="date-range-text">20.04.2026 – 27.05.2026</span>
+        </div>
+        <div class="icon-btn" id="themeToggleBtn" role="button" tabindex="0" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+          <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z"/></svg>
         </div>
         <div class="icon-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
@@ -1023,6 +1054,11 @@ function renderKpis(){
 }
 renderKpis();
  
+/* ---- theme-aware chart colors ---- */
+function themeColor(varName){
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+ 
 /* ---- Loads Overview line chart ---- */
 function renderLoadsChart(){
   const labels = ['20 Apr','21 Apr','22 Apr','23 Apr','25 Apr','26 Apr','27 Apr'];
@@ -1036,10 +1072,11 @@ function renderLoadsChart(){
   const innerW=w-padL-padR, innerH=h-padT-padB;
   const max=100;
   const stepX = innerW/(labels.length-1);
+  const gridColor = themeColor('--border'), labelColor = themeColor('--muted-2');
   let grid='';
   [0,25,50,75,100].forEach(v=>{
     const y = padT+innerH-(v/max)*innerH;
-    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#E4E9F4" stroke-width="1"/><text x="0" y="${y+3}" font-size="9" fill="#9AA5BD" font-family="JetBrains Mono, monospace">${v}</text>`;
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="${gridColor}" stroke-width="1"/><text x="0" y="${y+3}" font-size="9" fill="${labelColor}" font-family="JetBrains Mono, monospace">${v}</text>`;
   });
   let lines='';
   series.forEach(s=>{
@@ -1048,7 +1085,7 @@ function renderLoadsChart(){
     const dots = pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="${s.color}"/>`).join('');
     lines += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
   });
-  let xlabels = labels.map((l,i)=>`<text x="${padL+i*stepX}" y="${h-6}" text-anchor="middle" font-size="9.5" fill="#9AA5BD" font-family="Manrope">${l}</text>`).join('');
+  let xlabels = labels.map((l,i)=>`<text x="${padL+i*stepX}" y="${h-6}" text-anchor="middle" font-size="9.5" fill="${labelColor}" font-family="Manrope">${l}</text>`).join('');
   document.getElementById('loadsChart').innerHTML = grid+lines+xlabels;
 }
 renderLoadsChart();
@@ -1069,8 +1106,8 @@ function drawDonut(svgId, data, cx, cy, r, rInner, centerBig, centerSmall){
     angle+=slice;
   });
   document.getElementById(svgId).innerHTML = paths + (centerBig?`
-    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-size="${r*0.34}" font-weight="800" fill="#101B33" font-family="JetBrains Mono, monospace">${centerBig}</text>
-    <text x="${cx}" y="${cy+r*0.28}" text-anchor="middle" font-size="${r*0.15}" fill="#9AA5BD" font-family="Manrope, sans-serif" font-weight="700">${centerSmall}</text>
+    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-size="${r*0.34}" font-weight="800" fill="${themeColor('--ink')}" font-family="JetBrains Mono, monospace">${centerBig}</text>
+    <text x="${cx}" y="${cy+r*0.28}" text-anchor="middle" font-size="${r*0.15}" fill="${themeColor('--muted-2')}" font-family="Manrope, sans-serif" font-weight="700">${centerSmall}</text>
   `:'');
 }
 function renderLegend(elId, data, showPct=true){
@@ -1149,10 +1186,11 @@ function renderRevenue(){
   const innerW=w-padL-padR, innerH=h-padT-padB;
   const max=2000;
   const stepX=innerW/(data.length-1);
+  const gridColor2 = themeColor('--border'), labelColor2 = themeColor('--muted-2');
   let grid='';
   [0,500,1000,1500,2000].forEach(v=>{
     const y=padT+innerH-(v/max)*innerH;
-    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#E4E9F4" stroke-width="1"/><text x="0" y="${y+3}" font-size="8" fill="#9AA5BD" font-family="JetBrains Mono, monospace">${v}</text>`;
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="${gridColor2}" stroke-width="1"/><text x="0" y="${y+3}" font-size="8" fill="${labelColor2}" font-family="JetBrains Mono, monospace">${v}</text>`;
   });
   const pts = data.map((d,i)=>[padL+i*stepX, padT+innerH-(d/max)*innerH]);
   const path = pts.map((p,i)=>`${i===0?'M':'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
@@ -1271,8 +1309,9 @@ const trackerRows = [
 const carrierPool = [
   'Emons Spedition GmbH','Weidler Spedition','Ceva Ground Logistics','D.H.L Logistics',
   'Dachser Denmark','Astra Deutschland','Wenzel Logistics','Overis Spedition',
-  'Weidler Logistics','Contracted Carrier Logistics'
+  'Weidler Logistics','3PL Logistics'
 ];
+const HIGHLIGHT_CARRIER = '3PL Logistics';
 function shuffleArray(arr){
   const a = [...arr];
   for(let i=a.length-1;i>0;i--){
@@ -1293,16 +1332,50 @@ function shuffleTrackerCarriers(rows){
     return carrier;
   });
   const actualOrder = shuffleArray(carrierPool);
+ 
+  // A "No Show" row never had a carrier actually perform the pickup, so it's
+  // excluded from the subcontracting rate — subcontracting is only a
+  // meaningful concept for shipments that were actually picked up.
+  const eligibleIndices = rows.map((r,i)=>i).filter(i => rows[i].actualPu !== 'No Show');
+  const minSubcontracted = Math.ceil(eligibleIndices.length * 0.8); // at least 4/5
+ 
+  let subcontractedSet = new Set();
+  eligibleIndices.forEach(i=>{
+    if(Math.random() < 0.85){ subcontractedSet.add(i); }
+  });
+  if(subcontractedSet.size < minSubcontracted){
+    const remaining = shuffleArray(eligibleIndices.filter(i => !subcontractedSet.has(i)));
+    let needed = minSubcontracted - subcontractedSet.size;
+    for(const i of remaining){
+      if(needed <= 0) break;
+      subcontractedSet.add(i);
+      needed--;
+    }
+  }
+ 
   return rows.map((r,i)=>{
     const booked = bookedList[i];
     let actual = booked;
-    // ~40% chance the load was actually subcontracted to a different carrier — not every row is subcontracted
-    if(Math.random() < 0.4){
+    const isSubcontracted = subcontractedSet.has(i);
+    if(isSubcontracted){
       let candidate = actualOrder[i % actualOrder.length];
       if(candidate === booked){ candidate = actualOrder[(i+1) % actualOrder.length]; }
       actual = candidate;
     }
-    return { ...r, booked, actual };
+    // Keep the remarks column in sync with what actually happened, instead
+    // of the original static text (which described a different scenario).
+    let remarks;
+    if(r.actualPu === 'No Show'){
+      remarks = r.remarks; // preserve the original no-show note
+    } else if(isSubcontracted){
+      const subReasons = ['Subcontracted — booked carrier unavailable', 'Subcontracted — same-day capacity swap', 'Subcontracted — capacity shortage on booked carrier'];
+      remarks = subReasons[i % subReasons.length];
+    } else if(r.delay > 0){
+      remarks = 'Driver late';
+    } else {
+      remarks = 'On time';
+    }
+    return { ...r, booked, actual, remarks };
   });
 }
 let shuffledTrackerRows = shuffleTrackerCarriers(trackerRows);
@@ -1392,15 +1465,25 @@ renderTrackerMini();
 function renderCarrierLoadsKPI(){
   const shuffledCarriers = shuffleArray(carrierPool);
   const entries = shuffledCarriers
-    .map(name => [name, Math.floor(Math.random() * 20) + 1])
+    .map(name => {
+      // 3PL Logistics is consistently a top-2 volume carrier here, so it
+      // draws from a higher band than the rest of the pool (16-20 vs 1-15).
+      const count = name === HIGHLIGHT_CARRIER
+        ? Math.floor(Math.random() * 5) + 16
+        : Math.floor(Math.random() * 15) + 1;
+      return [name, count];
+    })
     .sort((a,b) => b[1] - a[1]);
   const max = entries.length ? entries[0][1] : 1;
-  document.getElementById('carrierLoadsBars').innerHTML = entries.map(([name,count])=>`
+  document.getElementById('carrierLoadsBars').innerHTML = entries.map(([name,count])=>{
+    const isHighlight = name === HIGHLIGHT_CARRIER;
+    return `
     <div class="carrier-bar-row">
-      <div class="name">${name}</div>
-      <div class="carrier-bar-track"><div class="carrier-bar-fill" style="width:${(count/max)*100}%"></div></div>
-      <div class="pct">${count}</div>
-    </div>`).join('');
+      <div class="name" style="${isHighlight ? 'color:var(--red);font-weight:800;' : ''}">${name}</div>
+      <div class="carrier-bar-track"><div class="carrier-bar-fill" style="width:${(count/max)*100}%; ${isHighlight ? 'background:var(--red);' : ''}"></div></div>
+      <div class="pct" style="${isHighlight ? 'color:var(--red);' : ''}">${count}</div>
+    </div>`;
+  }).join('');
 }
 renderCarrierLoadsKPI();
  
@@ -1441,6 +1524,7 @@ renderLegend('mgmtLegend', mgmtDonutData);
  
 const carrierPerf = [
   { name:'Weidler Spedition', pct:95 },
+  { name:'3PL Logistics', pct:93 },
   { name:'D.H.L Logistics', pct:91 },
   { name:'Ceva Ground Logistics', pct:88 },
   { name:'Dachser Denmark', pct:85 },
@@ -1448,16 +1532,18 @@ const carrierPerf = [
   { name:'Wenzel Logistics', pct:79 },
   { name:'Astra Deutschland', pct:76 },
   { name:'Weidler Logistics', pct:72 },
-  { name:'Contracted Carrier Logistics', pct:70 },
   { name:'Overis Spedition', pct:68 },
 ];
 function renderCarrierBars(){
-  document.getElementById('carrierBars').innerHTML = carrierPerf.map(c=>`
+  document.getElementById('carrierBars').innerHTML = carrierPerf.map(c=>{
+    const isHighlight = c.name === HIGHLIGHT_CARRIER;
+    return `
     <div class="carrier-bar-row">
-      <div class="name">${c.name}</div>
-      <div class="carrier-bar-track"><div class="carrier-bar-fill" style="width:${c.pct}%"></div></div>
-      <div class="pct">${c.pct}%</div>
-    </div>`).join('');
+      <div class="name" style="${isHighlight ? 'color:var(--red);font-weight:800;' : ''}">${c.name}</div>
+      <div class="carrier-bar-track"><div class="carrier-bar-fill" style="width:${c.pct}%; ${isHighlight ? 'background:var(--red);' : ''}"></div></div>
+      <div class="pct" style="${isHighlight ? 'color:var(--red);' : ''}">${c.pct}%</div>
+    </div>`;
+  }).join('');
 }
 renderCarrierBars();
  
@@ -1501,46 +1587,49 @@ function renderFulfillTrend(){
   const innerW=w-padL-padR, innerH=h-padT-padB;
   const min=0,max=100;
   const stepX=innerW/(data.length-1);
+  const gridColor3 = themeColor('--border'), labelColor3 = themeColor('--muted-2'), inkColor3 = themeColor('--ink');
   let grid='';
   [0,25,50,75,100].forEach(v=>{
     const y=padT+innerH-((v-min)/(max-min))*innerH;
-    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#E4E9F4" stroke-width="1"/><text x="8" y="${y+3}" font-size="10" fill="#9AA5BD" font-family="JetBrains Mono, monospace">${v}%</text>`;
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="${gridColor3}" stroke-width="1"/><text x="8" y="${y+3}" font-size="10" fill="${labelColor3}" font-family="JetBrains Mono, monospace">${v}%</text>`;
   });
   const pts = data.map((d,i)=>[padL+i*stepX, padT+innerH-((d-min)/(max-min))*innerH]);
   const path = pts.map((p,i)=>`${i===0?'M':'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-  const dots = pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#1652F0"/><text x="${p[0].toFixed(1)}" y="${p[1]-12}" text-anchor="middle" font-size="11" font-weight="700" fill="#101B33" font-family="JetBrains Mono, monospace">${data[i]}%</text>`).join('');
-  const xlabels = labels.map((l,i)=>`<text x="${padL+i*stepX}" y="${h-8}" text-anchor="middle" font-size="10.5" fill="#9AA5BD" font-family="Manrope">${l}</text>`).join('');
+  const dots = pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#1652F0"/><text x="${p[0].toFixed(1)}" y="${p[1]-12}" text-anchor="middle" font-size="11" font-weight="700" fill="${inkColor3}" font-family="JetBrains Mono, monospace">${data[i]}%</text>`).join('');
+  const xlabels = labels.map((l,i)=>`<text x="${padL+i*stepX}" y="${h-8}" text-anchor="middle" font-size="10.5" fill="${labelColor3}" font-family="Manrope">${l}</text>`).join('');
   document.getElementById('fulfillTrend').innerHTML = grid + `<path d="${path}" fill="none" stroke="#1652F0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>` + dots + xlabels;
 }
 renderFulfillTrend();
  
 const carrierDonutData = [
   { name:'Emons Spedition GmbH', val:18, color:'#1652F0', pctOverride:'17.5' },
+  { name:'3PL Logistics', val:16, color:'#E0473E', pctOverride:'15.5' },
   { name:'Weidler Spedition', val:15, color:'#1FAE7C', pctOverride:'14.6' },
-  { name:'Ceva Ground Logistics', val:13, color:'#D98C12', pctOverride:'12.6' },
-  { name:'D.H.L Logistics', val:12, color:'#7C4DDA', pctOverride:'11.7' },
-  { name:'Dachser Denmark', val:11, color:'#12A6A0', pctOverride:'10.7' },
-  { name:'Astra Deutschland', val:9, color:'#E0473E', pctOverride:'8.7' },
-  { name:'Wenzel Logistics', val:8, color:'#5C8DFF', pctOverride:'7.8' },
+  { name:'Ceva Ground Logistics', val:9, color:'#D98C12', pctOverride:'8.7' },
+  { name:'D.H.L Logistics', val:9, color:'#7C4DDA', pctOverride:'8.7' },
+  { name:'Dachser Denmark', val:9, color:'#12A6A0', pctOverride:'8.7' },
+  { name:'Astra Deutschland', val:7, color:'#F26B8A', pctOverride:'6.8' },
+  { name:'Wenzel Logistics', val:7, color:'#5C8DFF', pctOverride:'6.8' },
   { name:'Overis Spedition', val:7, color:'#F2A65A', pctOverride:'6.8' },
   { name:'Weidler Logistics', val:6, color:'#8FD3C7', pctOverride:'5.8' },
-  { name:'Contracted Carrier Logistics', val:4, color:'#B98CE0', pctOverride:'3.9' },
 ];
 drawDonut('carrierDonut', carrierDonutData, 70,70,52,33, '103','Total');
-document.getElementById('carrierLegend').innerHTML = carrierDonutData.map(d=>`
-  <div class="donut-row"><div class="lbl"><div class="sw" style="background:${d.color}"></div>${d.name}</div><div class="val">${d.val}<span class="pct">(${d.pctOverride}%)</span></div></div>`).join('');
+document.getElementById('carrierLegend').innerHTML = carrierDonutData.map(d=>{
+  const isHighlight = d.name === HIGHLIGHT_CARRIER;
+  return `<div class="donut-row"><div class="lbl" style="${isHighlight ? 'color:var(--red);font-weight:800;' : ''}"><div class="sw" style="background:${d.color}"></div>${d.name}</div><div class="val" style="${isHighlight ? 'color:var(--red);' : ''}">${d.val}<span class="pct">(${d.pctOverride}%)</span></div></div>`;
+}).join('');
  
 const scorecard = [
   { rank:1, name:'Emons Spedition GmbH', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:18, onTime:82, late:16, noShow:2, fees:'€320', delay:'24 min', score:81, scoreClass:'good' },
-  { rank:2, name:'Weidler Spedition', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:15, onTime:95, late:5, noShow:0, fees:'€80', delay:'6 min', score:96, scoreClass:'good' },
-  { rank:3, name:'Ceva Ground Logistics', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:13, onTime:88, late:10, noShow:2, fees:'€150', delay:'14 min', score:87, scoreClass:'good' },
-  { rank:4, name:'D.H.L Logistics', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:12, onTime:91, late:8, noShow:1, fees:'€110', delay:'10 min', score:90, scoreClass:'good' },
-  { rank:5, name:'Dachser Denmark', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:11, onTime:85, late:12, noShow:3, fees:'€190', delay:'18 min', score:83, scoreClass:'good' },
-  { rank:6, name:'Astra Deutschland', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:9, onTime:76, late:18, noShow:6, fees:'€260', delay:'27 min', score:74, scoreClass:'mid' },
-  { rank:7, name:'Wenzel Logistics', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:8, onTime:79, late:15, noShow:6, fees:'€230', delay:'22 min', score:76, scoreClass:'mid' },
-  { rank:8, name:'Overis Spedition', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:7, onTime:68, late:22, noShow:10, fees:'€410', delay:'35 min', score:60, scoreClass:'mid' },
-  { rank:9, name:'Weidler Logistics', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:6, onTime:72, late:20, noShow:8, fees:'€340', delay:'30 min', score:65, scoreClass:'mid' },
-  { rank:10, name:'Contracted Carrier Logistics', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:4, onTime:70, late:20, noShow:10, fees:'€550', delay:'38 min', score:62, scoreClass:'mid' },
+  { rank:2, name:'3PL Logistics', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:16, onTime:93, late:6, noShow:1, fees:'€90', delay:'7 min', score:94, scoreClass:'good' },
+  { rank:3, name:'Weidler Spedition', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:15, onTime:95, late:5, noShow:0, fees:'€80', delay:'6 min', score:96, scoreClass:'good' },
+  { rank:4, name:'Ceva Ground Logistics', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:9, onTime:88, late:10, noShow:2, fees:'€150', delay:'14 min', score:87, scoreClass:'good' },
+  { rank:5, name:'D.H.L Logistics', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:9, onTime:91, late:8, noShow:1, fees:'€110', delay:'10 min', score:90, scoreClass:'good' },
+  { rank:6, name:'Dachser Denmark', sub:'Logistics transport company', type:'Contracted Carrier', typeClass:'contracted', shipments:9, onTime:85, late:12, noShow:3, fees:'€190', delay:'18 min', score:83, scoreClass:'good' },
+  { rank:7, name:'Astra Deutschland', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:7, onTime:76, late:18, noShow:6, fees:'€260', delay:'27 min', score:74, scoreClass:'mid' },
+  { rank:8, name:'Wenzel Logistics', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:7, onTime:79, late:15, noShow:6, fees:'€230', delay:'22 min', score:76, scoreClass:'mid' },
+  { rank:9, name:'Overis Spedition', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:7, onTime:68, late:22, noShow:10, fees:'€410', delay:'35 min', score:60, scoreClass:'mid' },
+  { rank:10, name:'Weidler Logistics', sub:'Logistics transport company', type:'3PL Carrier', typeClass:'threepl', shipments:6, onTime:72, late:20, noShow:8, fees:'€340', delay:'30 min', score:65, scoreClass:'mid' },
 ];
 function bar(pct,color){ return `<span class="mini-bar-track"><span class="mini-bar-fill" style="width:${pct}%; background:${color};"></span></span>`; }
 let scorecardSortKey = null;
@@ -1554,10 +1643,12 @@ function renderScorecard(){
       return (av - bv) * scorecardSortDir;
     });
   }
-  document.getElementById('scorecardBody').innerHTML = rows.map((c,i)=>`
+  document.getElementById('scorecardBody').innerHTML = rows.map((c,i)=>{
+    const isHighlight = c.name === HIGHLIGHT_CARRIER;
+    return `
     <tr>
       <td><div style="width:22px;height:22px;border-radius:6px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">${scorecardSortKey ? i+1 : c.rank}</div></td>
-      <td><div style="font-weight:700;">${c.name}</div><div style="font-size:10.5px; color:var(--muted-2); font-weight:500;">${c.sub}</div></td>
+      <td><div style="font-weight:800; ${isHighlight ? 'color:var(--red);' : ''}">${c.name}</div><div style="font-size:10.5px; color:var(--muted-2); font-weight:500;">${c.sub}</div></td>
       <td><span class="type-badge ${c.typeClass}">${c.type}</span></td>
       <td>${c.shipments}</td>
       <td>${c.onTime}%${bar(c.onTime,'#1FAE7C')}</td>
@@ -1566,7 +1657,8 @@ function renderScorecard(){
       <td>${c.fees}</td>
       <td>${c.delay}</td>
       <td><span class="score-badge ${c.scoreClass}">${c.score}/100</span></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
  
   document.querySelectorAll('th.sortable').forEach(th=>{
     th.classList.toggle('sort-active', th.dataset.key === scorecardSortKey);
@@ -1666,6 +1758,48 @@ sidebarOverlay.addEventListener('click', closeSidebar);
 window.addEventListener('resize', ()=>{
   if(window.innerWidth > 980){ closeSidebar(); }
   else { sidebar.classList.remove('collapsed'); }
+});
+ 
+/* ============================================================
+   DARK / LIGHT MODE
+   Note: theme choice lives in memory for this session only (no
+   localStorage is used), so it resets on reload. It defaults to
+   the visitor's OS-level preference.
+============================================================ */
+function refreshThemedCharts(){
+  renderLoadsChart();
+  drawDonut('statusDonut', statusData, 70,70,52,33, '103','Total');
+  drawDonut('fleetDonut', fleetData, 70,70,52,33, '78%','Utilization');
+  renderRevenue();
+  drawDonut('otdDonut', otdData, 70,70,52,33, '84%','On-Time');
+  drawDonut('mgmtDonut', [{val:87,color:'#1FAE7C'},{val:13,color:'#D98C12'},{val:4,color:'#E0473E'},{val:4,color:'#9AA5BD'}], 110,110,82,52, '103','Total Shipments');
+  drawDonut('fulfillDonut', fulfillmentData, 90,90,68,44, '82%','Fulfilment Rate');
+  renderFulfillTrend();
+  drawDonut('carrierDonut', carrierDonutData, 70,70,52,33, '103','Total');
+}
+ 
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const themeIconSun = document.getElementById('themeIconSun');
+const themeIconMoon = document.getElementById('themeIconMoon');
+ 
+function setTheme(isDark){
+  document.documentElement.classList.toggle('dark', isDark);
+  themeIconSun.style.display = isDark ? 'none' : 'block';
+  themeIconMoon.style.display = isDark ? 'block' : 'none';
+  refreshThemedCharts();
+}
+ 
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+setTheme(prefersDark);
+ 
+themeToggleBtn.addEventListener('click', ()=>{
+  setTheme(!document.documentElement.classList.contains('dark'));
+});
+themeToggleBtn.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    setTheme(!document.documentElement.classList.contains('dark'));
+  }
 });
 </script>
 </body>
