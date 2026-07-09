@@ -537,6 +537,28 @@ tbody tr:last-child td{ border-bottom:none; }
   to{ opacity:1; transform:translateY(0); }
 }
  
+/* ===================== MAP TRACKING ===================== */
+.map-layout{ display:grid; grid-template-columns: 1fr 320px; gap:14px; margin-bottom:14px; align-items:start; }
+#liveMap{ width:100%; height:520px; border-radius:14px; z-index:1; }
+.map-panel{ padding:0; overflow:hidden; }
+.map-side-head{ padding:16px 18px 12px; border-bottom:1px solid var(--border); }
+.map-shipment-list{ max-height:520px; overflow-y:auto; }
+.map-shipment-item{
+  display:flex; align-items:flex-start; gap:11px;
+  padding:13px 18px; border-bottom:1px solid var(--border);
+  cursor:pointer; transition: background .15s ease;
+}
+.map-shipment-item:last-child{ border-bottom:none; }
+.map-shipment-item:hover, .map-shipment-item.active{ background: var(--bg); }
+.map-dot{ width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0; box-shadow:0 0 0 3px var(--white); }
+.map-shipment-item .msi-id{ font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--blue); }
+.map-shipment-item .msi-route{ font-size:11.5px; font-weight:600; color:var(--ink); margin-top:2px; }
+.map-shipment-item .msi-meta{ font-size:10.5px; color:var(--muted); font-weight:500; margin-top:3px; }
+.leaflet-popup-content-wrapper{ border-radius:10px; }
+.leaflet-popup-content{ font-family:'Manrope', sans-serif; font-size:12px; margin:10px 12px; }
+.map-popup-title{ font-weight:800; font-size:12.5px; margin-bottom:3px; }
+.map-popup-row{ color:#6B7794; font-size:11px; margin-top:2px; }
+ 
 /* ===================== RESPONSIVE ===================== */
  
 /* Large tablet / small laptop */
@@ -548,6 +570,7 @@ tbody tr:last-child td{ border-bottom:none; }
   .row-mgmt{ grid-template-columns: 1fr; }
   .mini-grid, .mini-grid.cols-6{ grid-template-columns: repeat(3,1fr); }
   .row-4{ grid-template-columns: repeat(2,1fr); }
+  .map-layout{ grid-template-columns: 1fr; }
 }
  
 /* Tablet: sidebar becomes an off-canvas drawer */
@@ -595,6 +618,7 @@ tbody tr:last-child td{ border-bottom:none; }
   .panel-head{ flex-wrap:wrap; gap:8px; }
   .lb-search{ width:100%; flex:1 1 100%; }
   .btn-primary, .btn-secondary{ padding:9px 12px; }
+  #liveMap{ height:360px; }
 }
  
 /* Small phone */
@@ -606,6 +630,7 @@ tbody tr:last-child td{ border-bottom:none; }
   .lb-dropdown{ flex:1 1 45%; justify-content:space-between; }
 }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
 <body>
 <div class="shell">
@@ -949,6 +974,36 @@ tbody tr:last-child td{ border-bottom:none; }
       </div>
     </div>
  
+    <!-- ===================== MAP TRACKING VIEW ===================== -->
+    <div class="view" id="view-map">
+      <div class="mini-grid cols-6" id="mapMiniGrid"></div>
+ 
+      <div class="map-layout">
+        <div class="panel" style="padding:14px;">
+          <div class="panel-head" style="margin-bottom:10px;">
+            <div>
+              <div class="panel-title">Live Shipment Locations — Berlin</div>
+              <div class="panel-sub">Real-time GPS position of active trucks around Berlin, DE</div>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#1FAE7C; border-radius:50%;"></div>In Transit</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#D98C12; border-radius:50%;"></div>Loading / Waiting</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#1652F0; border-radius:50%;"></div>Delivered</div>
+            </div>
+          </div>
+          <div id="liveMap"></div>
+        </div>
+ 
+        <div class="panel map-panel">
+          <div class="map-side-head">
+            <div class="panel-title">Active Shipments</div>
+            <div class="panel-sub">Click a shipment to focus it on the map</div>
+          </div>
+          <div class="map-shipment-list" id="mapShipmentList"></div>
+        </div>
+      </div>
+    </div>
+ 
     <!-- ===================== REPORTS VIEW ===================== -->
     <div class="view" id="view-reports">
       <div class="row-3 reports-top">
@@ -1024,7 +1079,7 @@ tbody tr:last-child td{ border-bottom:none; }
  
   </main>
 </div>
- 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 /* ============================================================
    DASHBOARD DATA + RENDER
@@ -1548,6 +1603,104 @@ function renderCarrierBars(){
 renderCarrierBars();
  
 /* ============================================================
+   MAP TRACKING VIEW
+============================================================ */
+const BERLIN_CENTER = [52.5200, 13.4050];
+const mapShipments = [
+  { id:'BEGRA-2011', carrier:'Jan de Vries', route:'Stuttgart, DE → Amsterdam, NL', status:'transit', lat:52.5065, lng:13.3777, note:'On A100, approaching Kreuzberg' },
+  { id:'BEGRA-2012', carrier:'Luca Bianchi', route:'Frankfurt, DE → Milan, IT', status:'transit', lat:52.5300, lng:13.3850, note:'Passing Tiergarten, on schedule' },
+  { id:'BEGRA-2009', carrier:'Andreas Müller', route:'Berlin, DE → Prague, CZ', status:'loading', lat:52.4934, lng:13.4509, note:'Loading at Neukölln depot' },
+  { id:'BEGRA-2010', carrier:'Thomas Bauer', route:'Munich, DE → Vienna, AT', status:'loading', lat:52.5451, lng:13.3572, note:'Waiting at Wedding warehouse' },
+  { id:'BEGRA-2013', carrier:'Michael Schmidt', route:'Wrocław, PL → Berlin, DE', status:'delivered', lat:52.4791, lng:13.3707, note:'Delivered at Tempelhof client site' },
+  { id:'BEGRA-2003', carrier:'Erik Wagner', route:'Berlin, DE → Berlin, DE', status:'transit', lat:52.5200, lng:13.4700, note:'On B96, crossing Friedrichshain' },
+];
+const statusColor = { transit:'#1FAE7C', loading:'#D98C12', delivered:'#1652F0' };
+const statusText = { transit:'In Transit', loading:'Loading / Waiting', delivered:'Delivered' };
+ 
+let liveMap, mapMarkers = {};
+ 
+function makePinIcon(color){
+  return L.divIcon({
+    className: 'begra-map-pin',
+    html: `<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.35);border:2px solid #fff;"></div>`,
+    iconSize: [22,22],
+    iconAnchor: [11,22],
+    popupAnchor: [0,-22]
+  });
+}
+ 
+function initLiveMap(){
+  if(liveMap) return;
+  liveMap = L.map('liveMap', { scrollWheelZoom:false }).setView(BERLIN_CENTER, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(liveMap);
+ 
+  mapShipments.forEach(s=>{
+    const marker = L.marker([s.lat, s.lng], { icon: makePinIcon(statusColor[s.status]) }).addTo(liveMap);
+    marker.bindPopup(`
+      <div class="map-popup-title">${s.id}</div>
+      <div class="map-popup-row"><strong>${statusText[s.status]}</strong></div>
+      <div class="map-popup-row">${s.route}</div>
+      <div class="map-popup-row">Carrier: ${s.carrier}</div>
+      <div class="map-popup-row">${s.note}</div>
+    `);
+    mapMarkers[s.id] = marker;
+  });
+ 
+  setTimeout(()=>{ liveMap.invalidateSize(); }, 150);
+}
+ 
+function renderMapShipmentList(){
+  document.getElementById('mapShipmentList').innerHTML = mapShipments.map(s=>`
+    <div class="map-shipment-item" data-id="${s.id}">
+      <div class="map-dot" style="background:${statusColor[s.status]}"></div>
+      <div>
+        <div class="msi-id">${s.id}</div>
+        <div class="msi-route">${s.route}</div>
+        <div class="msi-meta">${s.carrier} · ${statusText[s.status]}</div>
+      </div>
+    </div>`).join('');
+ 
+  document.querySelectorAll('.map-shipment-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      document.querySelectorAll('.map-shipment-item').forEach(i=>i.classList.remove('active'));
+      item.classList.add('active');
+      const s = mapShipments.find(x=>x.id === item.dataset.id);
+      if(liveMap && s){
+        liveMap.setView([s.lat, s.lng], 14, { animate:true });
+        mapMarkers[s.id].openPopup();
+      }
+    });
+  });
+}
+renderMapShipmentList();
+ 
+function renderMapMini(){
+  const inTransit = mapShipments.filter(s=>s.status==='transit').length;
+  const loading = mapShipments.filter(s=>s.status==='loading').length;
+  const delivered = mapShipments.filter(s=>s.status==='delivered').length;
+  const data = [
+    { label:'Tracked Shipments', value:String(mapShipments.length), bg:'var(--blue-light)', color:'var(--blue)', icon:'<circle cx="12" cy="10" r="3"/><path d="M12 21s7-7.2 7-11.5A7 7 0 105 9.5C5 13.8 12 21 12 21z"/>' },
+    { label:'In Transit', value:String(inTransit), bg:'var(--green-bg)', color:'var(--green)', icon:'<path d="M3 17V7a1 1 0 011-1h9v11M3 17h1m9 0h4m0 0h4v-5l-3-4h-5v9m0 0a2 2 0 104 0m-8 0a2 2 0 104 0"/>' },
+    { label:'Loading / Waiting', value:String(loading), bg:'var(--amber-bg)', color:'var(--amber)', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
+    { label:'Delivered Today', value:String(delivered), bg:'var(--purple-bg)', color:'var(--purple)', icon:'<path d="M5 13l4 4L19 7"/>' },
+    { label:'City Coverage', value:'Berlin, DE', bg:'var(--teal-bg)', color:'var(--teal)', icon:'<circle cx="12" cy="10" r="3"/><path d="M12 21s7-7.2 7-11.5A7 7 0 105 9.5C5 13.8 12 21 12 21z"/>' },
+    { label:'Last GPS Sync', value:'Just now', bg:'var(--blue-light)', color:'var(--blue)', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
+  ];
+  document.getElementById('mapMiniGrid').innerHTML = data.map(m=>`
+    <div class="mini-card">
+      <div class="mini-icon" style="background:${m.bg}; color:${m.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${m.icon}</svg></div>
+      <div>
+        <div class="mini-label">${m.label}</div>
+        <div class="mini-value">${m.value}</div>
+      </div>
+    </div>`).join('');
+}
+renderMapMini();
+ 
+/* ============================================================
    REPORTS VIEW
 ============================================================ */
 /* Carrier Fulfilment Rate: % of shipments performed by the carrier that
@@ -1703,12 +1856,12 @@ const pageMeta = {
   trucks:     { title:'Trucks', sub:'Fleet vehicle management' },
   drivers:    { title:'Drivers', sub:'Driver roster and performance' },
   customers:  { title:'Customers', sub:'Customer accounts and contacts' },
-  map:        { title:'Map Tracking', sub:'Live shipment locations' },
+  map:        { title:'Map Tracking', sub:'Live shipment locations in Berlin, DE' },
   invoices:   { title:'Invoices', sub:'Billing and payment records' },
   alerts:     { title:'Alerts', sub:'System and shipment notifications' },
   settings:   { title:'Settings', sub:'Account and workspace preferences' },
 };
-const builtViews = ['dashboard','loadboard','tracker','management','reports'];
+const builtViews = ['dashboard','loadboard','tracker','management','reports','map'];
  
 function setActive(view){
   document.querySelectorAll('.nav-item[data-view]').forEach(n=>n.classList.remove('active'));
@@ -1724,6 +1877,11 @@ function setActive(view){
   document.getElementById('pageTitle').textContent = meta.title;
   document.getElementById('pageSub').textContent = meta.sub;
   if(!isBuilt){ document.getElementById('placeholderTitle').textContent = meta.title; }
+ 
+  if(view === 'map'){
+    initLiveMap();
+    setTimeout(()=>{ if(liveMap) liveMap.invalidateSize(); }, 200);
+  }
 }
  
 document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
